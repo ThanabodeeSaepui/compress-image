@@ -13,12 +13,17 @@ const App = () => {
   const [quality, setQuality] = createSignal(0.9);
   const [compressedImage2, setCompressedImage2] = createSignal<string | null>(null);
   const [compressedSize2, setCompressedSize2] = createSignal<string | null>(null);
+  const [compressionTime, setCompressionTime] = createSignal<number | null>(null);
+  const [compressionTime2, setCompressionTime2] = createSignal<number | null>(null);
 
   const compressImage = (file: File, type: 'jpeg' | 'webp' | 'png') => {
+    const startTime = performance.now();
     new Compressor(file, {
       quality: quality(),
       mimeType: `image/${type}`,
       success(result) {
+        const endTime = performance.now();
+        setCompressionTime(endTime - startTime);
         setCompressedImage(URL.createObjectURL(result));
         setCompressedSize((result.size / 1024).toFixed(2));
       },
@@ -36,7 +41,10 @@ const App = () => {
       useWebWorker: true,
     };
     try {
+      const startTime = performance.now();
       const compressedFile = await imageCompression(file, options);
+      const endTime = performance.now();
+      setCompressionTime2(endTime - startTime);
       setCompressedImage2(URL.createObjectURL(compressedFile));
       setCompressedSize2((compressedFile.size / 1024).toFixed(2));
     } catch (error) {
@@ -111,6 +119,7 @@ const App = () => {
           <h2>Compressed (compressor.js)</h2>
           {compressedImage() ? <img src={compressedImage()!} alt="Compressed" class="image" /> : <div class="image"></div>}
           {compressedSize() && <p>Size: {compressedSize()} KB</p>}
+          {compressionTime() && <p>Time: {compressionTime()!.toFixed(0)} ms</p>}
           {originalSize() && compressedSize() && (
             <p>
               Reduction:{' '}
@@ -127,6 +136,7 @@ const App = () => {
           <h2>Compressed (browser-image-compression)</h2>
           {compressedImage2() ? <img src={compressedImage2()!} alt="Compressed with BIC" class="image" /> : <div class="image"></div>}
           {compressedSize2() && <p>Size: {compressedSize2()} KB</p>}
+          {compressionTime2() && <p>Time: {compressionTime2()!.toFixed(0)} ms</p>}
           {originalSize() && compressedSize2() && (
             <p>
               Reduction:{' '}
